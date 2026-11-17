@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block body %}
+<div class="top"><h1>Users &amp; activity</h1></div>
+<div class="panel">
+  <h2>Add a user</h2>
+  <form method="post" class="filters" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="create">
+    <div><label>Username</label><input name="username" required></div>
+    <div><label>Full name</label><input name="full_name"></div>
+    <div><label>Role</label><select name="role">
+      <option value="viewer">Viewer — read only</option>
+      <option value="accountant">Accountant — can record entries</option>
+      <option value="admin">Admin — everything + users</option></select></div>
+    <div><label>Starting password (8+ chars)</label><input name="password" type="password" minlength="8" autocomplete="new-password" required></div>
+    <button class="btn primary">Create</button>
+  </form>
+</div>
+<div class="panel">
+  <table>
+    <tr><th>User</th><th>Role</th><th>Status</th><th>Last sign-in</th><th>Actions</th></tr>
+    {% for u in rows %}
+    <tr><td><strong>{{ u.username }}</strong><br><span class="muted">{{ u.full_name or '' }}</span></td>
+      <td><form method="post" style="display:flex;gap:6px">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="role"><input type="hidden" name="uid" value="{{ u.id }}">
+          <select name="role">{% for r in ['viewer','accountant','admin'] %}<option {{ 'selected' if u.role==r }}>{{ r }}</option>{% endfor %}</select>
+          <button class="btn sm">Set</button></form></td>
+      <td>{{ 'Active' if u.active else 'Disabled' }}</td><td class="muted">{{ u.last_login or 'never' }}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="toggle"><input type="hidden" name="uid" value="{{ u.id }}">
+          <button class="btn sm {{ 'danger' if u.active }}">{{ 'Disable' if u.active else 'Enable' }}</button></form>
+        <form method="post" style="display:flex;gap:4px"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="reset"><input type="hidden" name="uid" value="{{ u.id }}">
+          <input name="password" type="password" placeholder="New password" minlength="8" autocomplete="new-password" required style="width:140px"><button class="btn sm">Reset</button></form>
+      </td></tr>
+    {% endfor %}
+  </table>
+</div>
+<div class="panel">
+  <h2>Recent activity</h2>
+  <table>
+    <tr><th>When</th><th>User</th><th>Action</th><th>Detail</th></tr>
+    {% for l in log %}<tr><td class="muted">{{ l.at }}</td><td>{{ l.username }}</td><td>{{ l.action }}</td><td>{{ l.detail }}</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

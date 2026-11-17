@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{% endblock %} · Ledgerline</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="layout">
+  <nav class="side">
+    <div class="brand">Ledger<span>line</span><small>{{ company }}</small></div>
+    {% set ep = request.endpoint %}
+    <h6>Overview</h6>
+    <a href="{{ url_for('dashboard') }}" class="{{ 'on' if ep=='dashboard' }}">Dashboard</a>
+    <a href="{{ url_for('transactions') }}" class="{{ 'on' if ep in ('transactions','transaction') }}">Transactions</a>
+    <a href="{{ url_for('accounts') }}" class="{{ 'on' if ep in ('accounts','register') }}">Chart of accounts</a>
+    <h6>People &amp; products</h6>
+    <a href="{{ url_for('customers') }}" class="{{ 'on' if ep=='customers' or (ep=='party' and request.view_args.kind=='customers') }}">Customers</a>
+    <a href="{{ url_for('vendors') }}" class="{{ 'on' if ep=='vendors' or (ep=='party' and request.view_args.kind=='vendors') }}">Vendors</a>
+    <a href="{{ url_for('items') }}" class="{{ 'on' if ep=='items' }}">Items &amp; services</a>
+    <h6>Reports</h6>
+    <a href="{{ url_for('reports') }}" class="{{ 'on' if ep in ('reports','profit_loss','balance_sheet','trial_balance','aging') }}">All reports</a>
+    {% if ROLES[me.role] >= 1 %}
+    <h6>Record</h6>
+    <a href="{{ url_for('new_doc', kind='invoice') }}" class="{{ 'on' if request.view_args and request.view_args.get('kind')=='invoice' }}">New invoice</a>
+    <a href="{{ url_for('new_doc', kind='payment') }}" class="{{ 'on' if request.view_args and request.view_args.get('kind')=='payment' }}">Receive payment</a>
+    <a href="{{ url_for('new_doc', kind='bill') }}" class="{{ 'on' if request.view_args and request.view_args.get('kind')=='bill' }}">New bill</a>
+    <a href="{{ url_for('new_doc', kind='billpay') }}" class="{{ 'on' if request.view_args and request.view_args.get('kind')=='billpay' }}">Pay bill</a>
+    <a href="{{ url_for('new_doc', kind='expense') }}" class="{{ 'on' if request.view_args and request.view_args.get('kind')=='expense' }}">Write cheque / expense</a>
+    <a href="{{ url_for('new_journal') }}" class="{{ 'on' if ep=='new_journal' }}">Journal entry</a>
+    {% endif %}
+    <h6>Account</h6>
+    {% if me.role == 'admin' %}<a href="{{ url_for('users') }}" class="{{ 'on' if ep=='users' }}">Users &amp; activity</a>{% endif %}
+    <a href="{{ url_for('change_password') }}" class="{{ 'on' if ep=='change_password' }}">Change password</a>
+    <form method="post" action="{{ url_for('logout') }}" style="padding:7px 20px">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn sm" style="background:transparent;color:var(--side-ink);border-color:#33466f">Sign out {{ me.username }}</button>
+    </form>
+  </nav>
+  <main class="main">
+    <header class="appbar">
+      <form class="gsearch" action="{{ url_for('search') }}">
+        <input name="q" value="{{ request.args.q if request.endpoint == 'search' else '' }}" placeholder="Search customers, vendors, items, transaction no., amount…" aria-label="Search">
+      </form>
+      {% if ROLES[me.role] >= 1 %}
+      <details class="newmenu">
+        <summary class="btn accent">+ New</summary>
+        <div class="menu">
+          <div><h6>Customers</h6>
+            <a href="{{ url_for('new_doc', kind='invoice') }}">Invoice</a>
+            <a href="{{ url_for('new_doc', kind='payment') }}">Receive payment</a>
+            <a href="{{ url_for('customers') }}#add">Customer</a></div>
+          <div><h6>Vendors</h6>
+            <a href="{{ url_for('new_doc', kind='bill') }}">Bill</a>
+            <a href="{{ url_for('new_doc', kind='billpay') }}">Pay bill</a>
+            <a href="{{ url_for('new_doc', kind='expense') }}">Cheque / expense</a>
+            <a href="{{ url_for('vendors') }}#add">Vendor</a></div>
+          <div><h6>Other</h6>
+            <a href="{{ url_for('edit_item') }}">Item / service</a>
+            <a href="{{ url_for('new_journal') }}">Journal entry</a></div>
+        </div>
+      </details>
+      {% endif %}
+      <span class="who">{{ me.full_name or me.username }} · {{ me.role }}</span>
+    </header>
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      {% for cat, m in msgs %}<div class="flash {{ cat }}">{{ m }}</div>{% endfor %}
+    {% endwith %}
+    {% block body %}{% endblock %}
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Items &amp; services{% endblock %}
+{% block body %}
+<div class="top"><h1>Items &amp; services</h1>
+  {% if ROLES[me.role] >= 1 %}<a class="btn accent" href="{{ url_for('edit_item') }}">+ New item</a>{% endif %}</div>
+<form class="filters">
+  <div><label>Search</label><input name="q" value="{{ q }}" placeholder="Code, description or MPN"></div>
+  <div><label>Show</label><select name="all"><option value="0">Active</option><option value="1" {{ 'selected' if all }}>All</option></select></div>
+  <button class="btn">Search</button>
+</form>
+<div class="panel">
+  <table>
+    <tr><th>Item</th><th>Description</th><th>Type</th><th>Income account</th><th class="n">Cost</th><th class="n">Price</th><th class="n">On hand</th></tr>
+    {% for r in rows %}
+    <tr><td>{% if ROLES[me.role] >= 1 %}<a href="{{ url_for('edit_item', iid=r.id) }}" title="Edit">{{ r.full_name }}</a>{% else %}{{ r.full_name }}{% endif %}{% if not r.active %} <span class="chip">inactive</span>{% endif %}</td><td>{{ r.description or '' }}</td>
+      <td class="muted">{{ r.type }}</td><td class="muted">{{ r.income_account or '' }}</td>
+      <td class="n">{{ r.cost|money(true) }}</td><td class="n">{{ r.price|money(true) }}</td><td class="n">{{ r.qty_on_hand|money(true) }}</td></tr>
+    {% else %}<tr><td colspan="7" class="muted">Nothing matches.</td></tr>{% endfor %}
+  </table>
+  {% include "_pager.html" %}
+</div>
+{% endblock %}

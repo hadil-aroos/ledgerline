@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ p.full_name }}{% endblock %}
+{% block body %}
+<div class="top"><h1>{{ p.full_name }}</h1>
+  {% if ROLES[me.role] >= 1 %}
+    {% if kind == 'customers' %}
+      <a class="btn accent" href="{{ url_for('new_doc', kind='invoice', party=p.full_name) }}">New invoice</a>
+      <a class="btn" href="{{ url_for('new_doc', kind='payment', party=p.full_name) }}">Receive payment</a>
+    {% else %}
+      <a class="btn accent" href="{{ url_for('new_doc', kind='bill', party=p.full_name) }}">New bill</a>
+      <a class="btn" href="{{ url_for('new_doc', kind='billpay', party=p.full_name) }}">Pay bill</a>
+    {% endif %}
+  {% endif %}
+</div>
+<div class="kpis">
+  <div class="kpi"><div class="l">{{ 'Owes you' if kind=='customers' else 'You owe' }}</div><div class="v">{{ balance|money }}</div></div>
+  <div class="kpi"><div class="l">Contact</div><div class="s" style="font-size:13px;color:var(--ink)">
+    {{ p.contact or '' }}<br>{{ p.phone or '' }}{% if p.email %}<br>{{ p.email }}{% endif %}</div></div>
+  <div class="kpi"><div class="l">Address</div><div class="s" style="font-size:13px;color:var(--ink)">{{ p.address or '—' }}</div></div>
+</div>
+<div class="panel">
+  <h2>Transactions <span class="muted" style="font-weight:400">(latest 500)</span></h2>
+  <table>
+    <tr><th>Date</th><th>Type</th><th>No.</th><th>Name</th><th class="n">Amount</th></tr>
+    {% for t in rows %}
+    <tr><td>{{ t.date|dmy }}</td><td><a href="{{ url_for('transaction', tid=t.id) }}">{{ t.type }}</a></td><td>{{ t.num }}</td>
+      <td>{{ t.name }}</td><td class="n">{{ t.amount|money }}</td></tr>
+    {% else %}<tr><td colspan="5" class="muted">No transactions.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

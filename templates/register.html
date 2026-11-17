@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ acc.name }}{% endblock %}
+{% block body %}
+<div class="top"><h1>{{ acc.name }}</h1><span class="chip">{{ acc.type }}</span></div>
+<p class="muted" style="margin-top:-10px">{{ acc.full_name }}</p>
+<form class="filters">
+  <div><label>From</label><input type="date" name="start" value="{{ start }}"></div>
+  <div><label>To</label><input type="date" name="end" value="{{ end }}"></div>
+  <div><label>Sub-accounts</label><select name="sub"><option value="1" {{ 'selected' if sub }}>Include</option><option value="0" {{ 'selected' if not sub }}>This account only</option></select></div>
+  <button class="btn">Apply</button>
+</form>
+<div class="panel">
+  {% if start %}<p class="muted">Opening balance {{ opening|money }}</p>{% endif %}
+  <table>
+    <tr><th>Date</th><th>Type</th><th>No.</th><th>Name</th><th>Memo</th>{% if sub %}<th>Account</th>{% endif %}<th class="n">Debit</th><th class="n">Credit</th><th class="n">Balance</th></tr>
+    {% for r in rows %}
+    <tr><td>{{ r.date|dmy }}</td><td><a href="{{ url_for('transaction', tid=r.tid) }}">{{ r.type }}</a></td><td>{{ r.num }}</td>
+      <td>{{ r.name }}</td><td>{{ r.memo }}</td>{% if sub %}<td class="muted">{{ r.acct }}</td>{% endif %}
+      <td class="n">{{ r.debit|money(true) }}</td><td class="n">{{ r.credit|money(true) }}</td>
+      <td class="n {{ 'neg' if r.running < 0 }}">{{ r.running|money }}</td></tr>
+    {% else %}<tr><td colspan="9" class="muted">No transactions in this range.</td></tr>{% endfor %}
+  </table>
+  {% include "_pager.html" %}
+</div>
+{% endblock %}

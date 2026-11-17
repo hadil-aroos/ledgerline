@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Transactions{% endblock %}
+{% block body %}
+<div class="top"><h1>Transactions</h1></div>
+<form class="filters">
+  <div><label>Search</label><input name="q" value="{{ args.q }}" placeholder="Name, number or memo"></div>
+  <div><label>Type</label><select name="type"><option value="">All types</option>
+    {% for t in types %}<option {{ 'selected' if args.type == t }}>{{ t }}</option>{% endfor %}</select></div>
+  <div><label>From</label><input type="date" name="start" value="{{ args.start }}"></div>
+  <div><label>To</label><input type="date" name="end" value="{{ args.end }}"></div>
+  <button class="btn">Search</button> <a class="btn" href="{{ url_for('transactions') }}">Clear</a>
+</form>
+<div class="panel">
+  <table>
+    <tr><th>Date</th><th>Type</th><th>No.</th><th>Name</th><th>QB #</th><th class="n">Amount</th></tr>
+    {% for t in rows %}
+    <tr><td>{{ t.date|dmy }}</td><td><a href="{{ url_for('transaction', tid=t.id) }}">{{ t.type }}</a>
+        {% if t.source == 'app' %}<span class="chip app">new</span>{% endif %}</td>
+      <td>{{ t.num }}</td><td>{{ t.name }}</td><td class="muted">{{ t.qb_trans_no or '' }}</td><td class="n">{{ t.amount|money }}</td></tr>
+    {% else %}<tr><td colspan="6" class="muted">Nothing matches.</td></tr>{% endfor %}
+  </table>
+  {% include "_pager.html" %}
+</div>
+{% endblock %}

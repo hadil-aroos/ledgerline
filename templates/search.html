@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Search{% endblock %}
+{% block body %}
+<div class="top"><h1>Search{% if q %} <span class="muted" style="font-weight:400">“{{ q }}”</span>{% endif %}</h1></div>
+{% if not q %}<p class="muted">Type in the search bar above.</p>{% endif %}
+{% if q and not (res.customers or res.vendors or res.products or res.accounts or res.transactions) %}
+  <div class="panel muted">Nothing found. Try part of a name, an invoice or cheque number, or an exact amount.</div>
+{% endif %}
+<div class="grid2 even">
+  {% if res.customers %}<div class="panel"><h2>Customers</h2><table>
+    {% for r in res.customers %}<tr><td><a href="{{ url_for('party', kind='customers', pid=r.id) }}">{{ r.full_name }}</a></td><td class="muted">{{ r.phone or '' }}</td></tr>{% endfor %}
+  </table></div>{% endif %}
+  {% if res.vendors %}<div class="panel"><h2>Vendors</h2><table>
+    {% for r in res.vendors %}<tr><td><a href="{{ url_for('party', kind='vendors', pid=r.id) }}">{{ r.full_name }}</a></td><td class="muted">{{ r.phone or '' }}</td></tr>{% endfor %}
+  </table></div>{% endif %}
+  {% if res.products %}<div class="panel"><h2>Items</h2><table>
+    {% for r in res.products %}<tr><td><a href="{{ url_for('items', q=r.full_name.split(':')[-1]) }}">{{ r.full_name }}</a></td><td class="muted">{{ r.description or '' }}</td><td class="n">{{ r.price|money(true) }}</td></tr>{% endfor %}
+  </table></div>{% endif %}
+  {% if res.accounts %}<div class="panel"><h2>Accounts</h2><table>
+    {% for r in res.accounts %}<tr><td><a href="{{ url_for('register', aid=r.id) }}">{{ r.full_name }}</a></td><td class="muted">{{ r.type }}</td></tr>{% endfor %}
+  </table></div>{% endif %}
+</div>
+{% if res.transactions %}<div class="panel"><h2>Transactions</h2><table>
+  <tr><th>Date</th><th>Type</th><th>No.</th><th>Name</th><th class="n">Amount</th></tr>
+  {% for t in res.transactions %}<tr><td>{{ t.date|dmy }}</td><td><a href="{{ url_for('transaction', tid=t.id) }}">{{ t.type }}</a></td><td>{{ t.num }}</td><td>{{ t.name }}</td><td class="n">{{ t.amount|money }}</td></tr>{% endfor %}
+</table></div>{% endif %}
+{% endblock %}

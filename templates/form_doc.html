@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% set titles = {'invoice':'New invoice','bill':'New bill','payment':'Receive payment','billpay':'Pay bill','expense':'Write cheque / expense'} %}
+{% block title %}{{ titles[kind] }}{% endblock %}
+{% block body %}
+<div class="top"><h1>{{ titles[kind] }}</h1></div>
+<datalist id="parties">{% for p in parties %}<option value="{{ p }}">{% endfor %}</datalist>
+<datalist id="accts">{% for a in accounts %}<option value="{{ a.full_name }}">{{ a.type }}</option>{% endfor %}</datalist>
+{% if items %}<datalist id="items">{% for it in items %}<option value="{{ it.full_name }}">{{ it.description or '' }}</option>{% endfor %}</datalist>{% endif %}
+<form method="post" class="panel" id="df">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="filters">
+    <div style="min-width:280px;flex:1"><label>{{ 'Customer' if party_kind=='customers' else 'Vendor' }}{{ '' if kind=='expense' else ' *' }}</label>
+      <input name="party" list="parties" value="{{ request.form.party or request.args.party or '' }}" style="width:100%" {{ '' if kind=='expense' else 'required' }}></div>
+    <div><label>Date</label><input type="date" name="date" value="{{ request.form.date or today }}" required></div>
+    <div><label>{{ 'Invoice no.' if kind=='invoice' else 'Reference / cheque no.' }}</label><input name="num" value="{{ request.form.num }}"></div>
+    {% if kind in ('payment','billpay','expense') %}
+    <div><label>{{ 'Deposit to' if kind=='payment' else 'Pay from' }} *</label><select name="bank" required>
+      {% for b in banks %}<option value="{{ b.id }}">{{ b.full_name }}</option>{% endfor %}</select></div>
+    {% endif %}
+  </div>
+  <div class="filters"><div style="flex:1"><label>Memo</label><input name="memo" value="{{ request.form.memo }}" style="width:100%"></div></div>
+
+  {% if kind in ('invoice','bill','expense') %}
+  <table class="lines">
+    <tr>{% if kind=='invoice' %}<th style="width:22%">Item (optional)</th>{% endif %}<th style="width:32%">{{ 'Income account' if kind=='invoice' else 'Expense / asset account' }}</th><th>Description</th><th class="n" style="width:16%">Amount</th></tr>
+    {% for i in range(8) %}
+    <tr>{% if kind=='invoice' %}<td><input class="item" list="items" placeholder="Item code"></td>{% endif %}
+      <td><input name="account" list="accts"></td><td><input name="desc"></td>
+      <td><input name="amount" inputmode="decimal" style="text-align:right"></td></tr>
+    {% endfor %}
+    <tr class="tot"><td colspan="{{ 3 if kind=='invoice' else 2 }}">Total</td><td class="n" id="total">0.00</td></tr>
+  </table>
+  {% else %}
+  <div class="filters"><div><label>Amount *</label><input name="amount" inputmode="decimal" required style="text-align:right"></div></div>
+  {% endif %}
+  <p><button class="btn accent">Save</button></p>
+  <p class="muted">
+    {% if kind=='invoice' %}Posts the total to Accounts Receivable and each line to its income account.
+    {% elif kind=='bill' %}Posts the total to Accounts Payable and each line to its account.
+    {% elif kind=='payment' %}Moves the amount from Accounts Receivable into the chosen bank account.
+    {% elif kind=='billpay' %}Reduces Accounts Payable and pays from the chosen bank account.
+    {% else %}Pays directly from the bank account, without a bill.{% endif %}
+  </p>
+</form>
+{% if items %}
+<script id="itemdata" type="application/json">{{ items|map('list')|list|tojson }}</script>
+<script>
+const ITEMS = Object.fromEntries(JSON.parse(document.getElementById('itemdata').textContent).map(r=>[r[0], r]));
+document.querySelectorAll('input.item').forEach(inp=>inp.addEventListener('change', ()=>{
+  const it = ITEMS[inp.value]; if(!it) return;
+  const tr = inp.closest('tr');
+  tr.querySelector('[name=desc]').value = it[1] || inp.value;
+  if(it[3]) tr.querySelector('[name=account]').value = it[3];
+  if(it[2]) tr.querySelector('[name=amount]').value = it[2];
+  sum();
+}));
+</script>
+{% endif %}
+<script>
+function sum(){
+  let t=0; document.querySelectorAll('#df input[name=amount]').forEach(i=>t+=parseFloat(i.value.replace(/,/g,''))||0);
+  const el=document.getElementById('total'); if(el) el.textContent=t.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+document.getElementById('df').addEventListener('input', sum);
+</script>
+{% endblock %}

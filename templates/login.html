@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Ledgerline</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
+<body>
+<form class="login" method="post">
+  <h1>Ledger<span>line</span></h1>
+  <p class="muted" style="margin:0 0 18px">{{ company }}</p>
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, m in msgs %}<div class="flash {{ cat }}">{{ m }}</div>{% endfor %}
+  {% endwith %}
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label for="u">Username</label><input id="u" name="username" autocomplete="username" autofocus required>
+  <label for="p">Password</label><input id="p" type="password" name="password" autocomplete="current-password" required>
+  <button class="btn primary" style="width:100%">Sign in</button>
+</form>
+</body></html>

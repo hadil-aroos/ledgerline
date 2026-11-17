@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block body %}
+<div class="top"><h1>Reports</h1></div>
+<div class="cards">
+  <div class="card"><h3>Profit &amp; Loss</h3><p>Income, cost of sales and expenses for a period. Defaults to this fiscal year.</p>
+    <a class="btn primary" href="{{ url_for('profit_loss') }}">Open</a></div>
+  <div class="card"><h3>Balance Sheet</h3><p>Assets, liabilities and equity as of a date.</p>
+    <a class="btn primary" href="{{ url_for('balance_sheet') }}">Open</a></div>
+  <div class="card"><h3>Trial Balance</h3><p>Every account's debit or credit balance. Totals must match.</p>
+    <a class="btn primary" href="{{ url_for('trial_balance') }}">Open</a></div>
+  <div class="card"><h3>Receivables aging</h3><p>What each customer owes, by how overdue it is.</p>
+    <a class="btn primary" href="{{ url_for('aging', kind='customers') }}">Open</a></div>
+  <div class="card"><h3>Payables aging</h3><p>What you owe each vendor, by age.</p>
+    <a class="btn primary" href="{{ url_for('aging', kind='vendors') }}">Open</a></div>
+  <div class="card"><h3>Account register</h3><p>Every line posted to one account with a running balance.</p>
+    <a class="btn primary" href="{{ url_for('accounts') }}">Pick an account</a></div>
+</div>
+{% endblock %}

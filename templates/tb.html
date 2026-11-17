@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Trial Balance{% endblock %}
+{% block body %}
+<div class="top"><h1>Trial Balance</h1>
+  <a class="btn" href="?{{ request.args.to_dict()|urlencode }}&format=csv">Download CSV</a>
+  <button class="btn" onclick="window.print()">Print</button></div>
+<form class="filters">
+  <div><label>As of</label><input type="date" name="asof" value="{{ asof }}"></div>
+  <button class="btn">Run</button>
+</form>
+<div class="panel">
+  <table>
+    <tr><th>Account</th><th>Type</th><th class="n">Debit</th><th class="n">Credit</th></tr>
+    {% for a, t, d, c in lines %}
+    <tr><td>{{ a }}</td><td class="muted">{{ t }}</td><td class="n">{{ d|money(true) }}</td><td class="n">{{ c|money(true) }}</td></tr>
+    {% endfor %}
+    <tr class="tot"><td colspan="2">Total</td><td class="n">{{ td|money }}</td><td class="n">{{ tc|money }}</td></tr>
+  </table>
+</div>
+{% endblock %}

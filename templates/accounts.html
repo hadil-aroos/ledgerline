@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Chart of accounts{% endblock %}
+{% block body %}
+<div class="top"><h1>Chart of accounts</h1></div>
+<form class="filters">
+  <div><label>Search</label><input name="q" value="{{ q }}" placeholder="Account name"></div>
+  <div><label>Balances as of</label><input type="date" name="asof" value="{{ asof }}"></div>
+  <button class="btn">Apply</button>
+</form>
+{% for title, rows in groups %}
+<div class="panel">
+  <h2>{{ title }}</h2>
+  <table>
+    <tr><th>Account</th><th>Type</th><th class="n">Balance</th></tr>
+    {% for r in rows %}
+    <tr class="{{ 'sub' if r.parent }}">
+      <td class="indent{{ [r.depth,4]|min }}"><a href="{{ url_for('register', aid=r.id) }}">{{ r.name }}</a></td>
+      <td class="muted">{{ r.type }}</td>
+      <td class="n {{ 'neg' if r.total < 0 }}">{{ r.total|money }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endfor %}
+{% endblock %}

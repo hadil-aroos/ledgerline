@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% set label = 'Customers' if kind == 'customers' else 'Vendors' %}
+{% block title %}{{ label }}{% endblock %}
+{% block body %}
+<div class="top"><h1>{{ label }}</h1>
+  <span class="who">{{ '{:,}'.format(rows|length) }} shown · {{ 'open balance' if kind=='customers' else 'you owe' }} {{ total|money }}</span></div>
+<form class="filters">
+  <div><label>Search</label><input name="q" value="{{ q }}" placeholder="Name, company, phone"></div>
+  <div><label>Show</label><select name="show">
+    <option value="active" {{ 'selected' if show=='active' }}>Active</option>
+    <option value="balance" {{ 'selected' if show=='balance' }}>With a balance</option>
+    <option value="all" {{ 'selected' if show=='all' }}>All, incl. inactive</option></select></div>
+  <button class="btn">Apply</button>
+</form>
+{% if ROLES[me.role] >= 1 %}
+<details class="panel" id="add"><summary style="cursor:pointer;font-weight:600">Add a {{ label[:-1]|lower }}</summary>
+  <form method="post" action="{{ url_for('add_party', kind=kind) }}" class="filters" style="margin:12px 0 0">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div><label>Name *</label><input name="full_name" required></div>
+    <div><label>Company</label><input name="company"></div>
+    <div><label>Phone</label><input name="phone"></div>
+    {% if kind == 'customers' %}<div><label>Email</label><input name="email" type="email"></div>{% endif %}
+    <div><label>Address</label><input name="address"></div>
+    <button class="btn primary">Add</button>
+  </form>
+</details>
+{% endif %}
+<div class="panel scroll">
+  <table>
+    <tr><th>Name</th><th>Company</th><th>Phone</th>{% if kind=='customers' %}<th>Rep</th>{% endif %}<th class="n">Balance</th></tr>
+    {% for r in rows %}
+    <tr><td><a href="{{ url_for('party', kind=kind, pid=r.id) }}">{{ r.full_name }}</a>{% if not r.active %} <span class="chip">inactive</span>{% endif %}</td>
+      <td>{{ r.company or '' }}</td><td>{{ r.phone or '' }}</td>{% if kind=='customers' %}<td>{{ r.rep or '' }}</td>{% endif %}
+      <td class="n {{ 'neg' if r.balance < 0 }}">{{ r.balance|money(true) }}</td></tr>
+    {% else %}<tr><td colspan="5" class="muted">Nothing matches.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% set label = 'Receivables aging' if kind == 'customers' else 'Payables aging' %}
+{% block title %}{{ label }}{% endblock %}
+{% block body %}
+<div class="top"><h1>{{ label }}</h1>
+  <a class="btn" href="?{{ request.args.to_dict()|urlencode }}&format=csv">Download CSV</a>
+  <button class="btn" onclick="window.print()">Print</button></div>
+<form class="filters">
+  <div><label>As of</label><input type="date" name="asof" value="{{ asof }}"></div>
+  <button class="btn">Run</button>
+</form>
+<div class="panel scroll">
+  <p class="muted" style="margin-top:0">Payments are applied to the oldest open amounts first. Days are counted from the transaction date.</p>
+  <table>
+    <tr><th>Name</th>{% for b in buckets %}<th class="n">{{ b }}</th>{% endfor %}<th class="n">Total</th></tr>
+    {% for n, b, t in rows %}
+    <tr><td>{{ n }}</td>{% for x in b %}<td class="n">{{ x|money(true) }}</td>{% endfor %}<td class="n"><strong>{{ t|money }}</strong></td></tr>
+    {% else %}<tr><td colspan="7" class="muted">No open balances.</td></tr>{% endfor %}
+    <tr class="tot"><td>Total</td>{% for x in totals %}<td class="n">{{ x|money }}</td>{% endfor %}<td class="n">{{ totals|sum|money }}</td></tr>
+  </table>
+</div>
+{% endblock %}

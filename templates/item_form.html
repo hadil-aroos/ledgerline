@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit item' if item else 'New item' }}{% endblock %}
+{% block body %}
+<div class="top"><h1>{{ 'Edit item' if item else 'New item' }}</h1><a class="btn" href="{{ url_for('items') }}">Back to items</a></div>
+<datalist id="parents">{% for p in parents %}<option value="{{ p }}">{% endfor %}</datalist>
+<datalist id="accts">{% for a in accounts %}<option value="{{ a.full_name }}">{{ a.type }}</option>{% endfor %}</datalist>
+<datalist id="vendors">{% for x in vendors %}<option value="{{ x }}">{% endfor %}</datalist>
+<form method="post" class="panel" style="max-width:860px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="formgrid">
+    <div><label>Type *</label><select name="type">
+      {% for t in types %}<option {{ 'selected' if d.get('type') == t }}>{{ t }}</option>{% endfor %}</select></div>
+    <div><label>Item name / code *</label><input name="name" value="{{ d.get('name') or '' }}" required placeholder="e.g. DS-2CD1043G2"></div>
+    <div><label>Sub-item of (group)</label><input name="parent" list="parents" value="{{ d.get('parent') or '' }}" placeholder="e.g. Import Items - Air"></div>
+    <div><label>Manufacturer part no. (MPN)</label><input name="mpn" value="{{ d.get('mpn') or '' }}"></div>
+    <div class="wide"><label>Description (shown on invoices)</label><textarea name="description" rows="2">{{ d.get('description') or '' }}</textarea></div>
+    <div><label>Sales price</label><input name="price" inputmode="decimal" value="{{ d.get('price') or '' }}" style="text-align:right"></div>
+    <div><label>Cost</label><input name="cost" inputmode="decimal" value="{{ d.get('cost') or '' }}" style="text-align:right"></div>
+    <div><label>Income account *</label><input name="income_account" list="accts" value="{{ d.get('income_account') or '' }}" required></div>
+    <div><label>Cost / COGS account</label><input name="cogs_account" list="accts" value="{{ d.get('cogs_account') or '' }}"></div>
+    <div><label>Unit of measure</label><input name="unit" value="{{ d.get('unit') or '' }}" placeholder="e.g. Pices (PCS)"></div>
+    <div><label>Preferred vendor</label><input name="preferred_vendor" list="vendors" value="{{ d.get('preferred_vendor') or '' }}"></div>
+    <div class="wide"><label class="check"><input type="checkbox" name="active" value="1" {{ 'checked' if d.get('active') }}> Active (offered on new invoices)</label></div>
+  </div>
+  <p style="margin-bottom:0"><button class="btn accent">{{ 'Save changes' if item else 'Add item' }}</button></p>
+</form>
+{% if item and item.qty_on_hand %}<p class="muted">Quantity on hand ({{ item.qty_on_hand|money }}) comes from QuickBooks and isn't edited here.</p>{% endif %}
+{% endblock %}

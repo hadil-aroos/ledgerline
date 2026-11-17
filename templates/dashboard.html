@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block body %}
+<div class="top"><h1>Dashboard</h1>
+  <span class="who">Fiscal year {{ fy_start.strftime('%d %b %Y') }} – {{ fy_end.strftime('%d %b %Y') }} · amounts in {{ currency }}</span></div>
+
+{% if ROLES[me.role] >= 1 %}
+<div class="actions">
+  <div class="agroup"><h6>Customers</h6>
+    <a href="{{ url_for('new_doc', kind='invoice') }}"><b>🧾</b>Create invoice</a>
+    <a href="{{ url_for('new_doc', kind='payment') }}"><b>💵</b>Receive payment</a>
+    <a href="{{ url_for('aging', kind='customers') }}"><b>⏳</b>Who owes us</a></div>
+  <div class="agroup"><h6>Vendors</h6>
+    <a href="{{ url_for('new_doc', kind='bill') }}"><b>📥</b>Enter bill</a>
+    <a href="{{ url_for('new_doc', kind='billpay') }}"><b>📤</b>Pay bills</a>
+    <a href="{{ url_for('aging', kind='vendors') }}"><b>⏳</b>What we owe</a></div>
+  <div class="agroup"><h6>Banking &amp; books</h6>
+    <a href="{{ url_for('new_doc', kind='expense') }}"><b>✍️</b>Write cheque</a>
+    <a href="{{ url_for('new_journal') }}"><b>📒</b>Journal entry</a>
+    <a href="{{ url_for('profit_loss') }}"><b>📊</b>Profit &amp; Loss</a></div>
+</div>
+{% endif %}
+
+<div class="kpis">
+  <div class="kpi"><div class="l">Income (FY to date)</div><div class="v">{{ income|money }}</div></div>
+  <div class="kpi"><div class="l">Cost of sales + expenses</div><div class="v">{{ (cogs + expenses)|money }}</div>
+    <div class="s">COGS {{ cogs|money }} · Expenses {{ expenses|money }}</div></div>
+  <div class="kpi"><div class="l">Net profit (FY to date)</div><div class="v {{ 'neg' if net < 0 else 'pos' }}">{{ net|money }}</div></div>
+  <div class="kpi"><div class="l">Customers owe you</div><div class="v"><a href="{{ url_for('aging', kind='customers') }}">{{ ar|money }}</a></div></div>
+  <div class="kpi"><div class="l">You owe vendors</div><div class="v"><a href="{{ url_for('aging', kind='vendors') }}">{{ ap|money }}</a></div></div>
+</div>
+
+<div class="grid2">
+  <div class="panel">
+    <h2>Income vs. costs — last 12 months</h2>
+    <div class="legend"><span><i style="background:#2f6fda"></i>Income</span><span><i style="background:var(--accent)"></i>COGS + expenses</span></div>
+    <div class="bars">
+      {% for c in chart %}
+      <div class="m" title="{{ c.label }}: income {{ c.income|money }}, costs {{ c.expense|money }}">
+        <div class="pair">
+          <div class="b inc" style="height:{{ (c.income / peak * 100) if c.income > 0 else 0 }}%"></div>
+          <div class="b exp" style="height:{{ (c.expense / peak * 100) if c.expense > 0 else 0 }}%"></div>
+        </div>
+        <div class="lab">{{ c.label }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Bank balances <span class="muted" style="font-weight:400">· total {{ cash|money }}</span></h2>
+    <div class="scroll" style="max-height:230px">
+    <table>
+      {% for b in banks %}
+      <tr><td><a href="{{ url_for('register', aid=b.id) }}">{{ b.name }}</a></td><td class="n {{ 'neg' if b.bal < 0 }}">{{ b.bal|money }}</td></tr>
+      {% else %}<tr><td class="muted">No bank balances.</td></tr>{% endfor %}
+    </table>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Latest transactions</h2>
+  <table>
+    <tr><th>Date</th><th>Type</th><th>No.</th><th>Name</th><th class="n">Amount</th></tr>
+    {% for t in recent %}
+    <tr><td>{{ t.date|dmy }}</td><td><a href="{{ url_for('transaction', tid=t.id) }}">{{ t.type }}</a>
+      {% if t.source == 'app' %}<span class="chip app">new</span>{% endif %}</td>
+      <td>{{ t.num }}</td><td>{{ t.name }}</td><td class="n">{{ t.amount|money }}</td></tr>
+    {% endfor %}
+  </table>
+  <p class="muted" style="margin:10px 0 0">QuickBooks data imported {{ imported or 'never' }}.</p>
+</div>
+{% endblock %}

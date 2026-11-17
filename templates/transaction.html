@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ t.type }} {{ t.num }}{% endblock %}
+{% block body %}
+<div class="top"><h1>{{ t.type }} {% if t.num %}<span class="muted">#{{ t.num }}</span>{% endif %}</h1>
+  <button class="btn" onclick="window.print()">Print</button></div>
+<div class="panel">
+  <table style="width:auto">
+    <tr><td class="muted">Date</td><td>{{ t.date|dmy }}</td></tr>
+    {% if t.name %}<tr><td class="muted">Name</td><td>{{ t.name }}</td></tr>{% endif %}
+    {% if t.memo %}<tr><td class="muted">Memo</td><td>{{ t.memo }}</td></tr>{% endif %}
+    <tr><td class="muted">Source</td><td>{% if t.source == 'app' %}Entered here by {{ t.created_by }} on {{ t.created_at }}{% else %}QuickBooks import (trans #{{ t.qb_trans_no }}){% endif %}</td></tr>
+  </table>
+</div>
+<div class="panel">
+  <table>
+    <tr><th>Account</th><th>Name</th><th>Memo</th><th class="n">Debit</th><th class="n">Credit</th></tr>
+    {% set ns = namespace(d=0, c=0) %}
+    {% for s in splits %}{% set ns.d = ns.d + s.debit %}{% set ns.c = ns.c + s.credit %}
+    <tr><td><a href="{{ url_for('register', aid=s.aid) }}">{{ s.acct }}</a></td><td>{{ s.name }}</td><td>{{ s.memo }}</td>
+      <td class="n">{{ s.debit|money(true) }}</td><td class="n">{{ s.credit|money(true) }}</td></tr>
+    {% endfor %}
+    <tr class="tot"><td colspan="3">Total</td><td class="n">{{ ns.d|money }}</td><td class="n">{{ ns.c|money }}</td></tr>
+  </table>
+</div>
+{% if me.role == 'admin' and t.source == 'app' %}
+<form method="post" action="{{ url_for('delete_transaction', tid=t.id) }}" onsubmit="return confirm('Delete this transaction? This cannot be undone.')">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button class="btn danger">Delete this transaction</button>
+</form>
+{% endif %}
+{% endblock %}

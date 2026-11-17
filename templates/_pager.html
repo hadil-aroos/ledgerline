@@ -1,0 +1,10 @@
+{% if pages > 1 %}
+{% set qs = request.args.to_dict() %}
+<div class="pager">
+  {% if page > 1 %}{% set _ = qs.update({'page': 1}) %}<a class="btn sm" href="?{{ qs|urlencode }}">« First</a>
+  {% set _ = qs.update({'page': page-1}) %}<a class="btn sm" href="?{{ qs|urlencode }}">‹ Prev</a>{% endif %}
+  <span>Page {{ page }} of {{ pages }} · {{ '{:,}'.format(total) }} rows</span>
+  {% if page < pages %}{% set _ = qs.update({'page': page+1}) %}<a class="btn sm" href="?{{ qs|urlencode }}">Next ›</a>
+  {% set _ = qs.update({'page': pages}) %}<a class="btn sm" href="?{{ qs|urlencode }}">Last »</a>{% endif %}
+</div>
+{% endif %}

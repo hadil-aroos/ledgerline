@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Journal entry{% endblock %}
+{% block body %}
+<div class="top"><h1>Journal entry</h1></div>
+<datalist id="accts">{% for a in accounts %}<option value="{{ a.full_name }}">{{ a.type }}</option>{% endfor %}</datalist>
+<form method="post" class="panel" id="jf">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="filters">
+    <div><label>Date</label><input type="date" name="date" value="{{ request.form.date or today }}" required></div>
+    <div><label>Entry no.</label><input name="num" value="{{ request.form.num }}"></div>
+    <div style="flex:1"><label>Memo</label><input name="memo" value="{{ request.form.memo }}" style="width:100%"></div>
+  </div>
+  <table class="lines">
+    <tr><th style="width:36%">Account</th><th class="n">Debit</th><th class="n">Credit</th><th>Name</th><th>Memo</th></tr>
+    {% for i in range(8) %}
+    <tr><td><input name="account" list="accts" placeholder="Start typing an account"></td>
+      <td><input name="debit" inputmode="decimal" class="amt" style="text-align:right"></td>
+      <td><input name="credit" inputmode="decimal" class="amt" style="text-align:right"></td>
+      <td><input name="lname"></td><td><input name="lmemo"></td></tr>
+    {% endfor %}
+    <tr class="tot"><td>Totals</td><td class="n" id="td">0.00</td><td class="n" id="tc">0.00</td><td colspan="2" id="diff" class="muted"></td></tr>
+  </table>
+  <p><button class="btn accent">Save entry</button></p>
+</form>
+<script>
+const f = document.getElementById('jf');
+function tot(){
+  let d=0,c=0;
+  f.querySelectorAll('input[name=debit]').forEach(i=>d+=parseFloat(i.value.replace(/,/g,''))||0);
+  f.querySelectorAll('input[name=credit]').forEach(i=>c+=parseFloat(i.value.replace(/,/g,''))||0);
+  document.getElementById('td').textContent=d.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('tc').textContent=c.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  const x=Math.round((d-c)*100)/100;
+  document.getElementById('diff').textContent = x ? 'Out of balance by '+Math.abs(x).toLocaleString(undefined,{minimumFractionDigits:2}) : (d ? 'Balanced' : '');
+}
+f.addEventListener('input', tot);
+</script>
+{% endblock %}
